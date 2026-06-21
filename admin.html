@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>現場WORKS 管理</title>
+<style>
+:root{--line:#06c755;--ink:#14181b;--sub:#6b7280;--bg:#eef1f4;--card:#fff;--bd:#e6eaee;--warn:#e8453c;--ok:#0a8f4f;--amber:#b45309}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;background:var(--bg);color:var(--ink)}
+.top{background:#fff;border-bottom:1px solid var(--bd);padding:14px 22px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
+.lg{width:30px;height:30px;border-radius:9px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.top b{font-size:16px}.top a{margin-left:auto;font-size:13px;color:var(--line);text-decoration:none;font-weight:700}
+.wrap{max-width:920px;margin:0 auto;padding:20px}
+.panel{background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:18px}
+.panel .ph{padding:14px 18px;border-bottom:1px solid var(--bd);font-weight:800;font-size:14px}
+.panel .pc{padding:8px 18px 16px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f2f4;flex-wrap:wrap}.row:last-child{border:0}
+.av{width:30px;height:30px;border-radius:50%;background:#dfe6ec;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#5b6770;flex:0 0 auto}
+.nm{font-weight:700;font-size:14px}
+.muted{color:var(--sub);font-size:12px}
+input,select{padding:9px 10px;border:1px solid var(--bd);border-radius:9px;font:inherit;font-size:13px}
+.btn{border:0;background:var(--line);color:#fff;font-size:12.5px;font-weight:800;padding:8px 13px;border-radius:9px;cursor:pointer}
+.btn.gh{background:#fff;border:1px solid var(--bd);color:var(--ink)}
+.btn.warn{background:var(--warn)}
+.btn.dark{background:#11181c}
+.empty{color:var(--sub);font-size:13px;text-align:center;padding:18px}
+.qrlink{font-size:12px;color:var(--line);text-decoration:none;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:6px}
+.tagpill{font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px}
+.on{background:#e7f8ef;color:var(--ok)}.off{background:#fdecea;color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="top"><div class="lg">現</div><b>現場WORKS 管理</b><a href="dashboard.html">ダッシュボードへ →</a></div>
+<div class="wrap">
+  <div class="panel"><div class="ph">未登録の職人（承認待ち）</div><div class="pc" id="pending"><div class="empty">読込中…</div></div></div>
+  <div class="panel"><div class="ph">職人一覧</div><div class="pc" id="workers"><div class="empty">読込中…</div></div></div>
+  <div class="panel"><div class="ph">現場</div><div class="pc"><div id="siteList"><div class="empty">読込中…</div></div>
+    <div style="border-top:1px solid var(--bd);margin-top:10px;padding-top:14px">
+      <div class="muted" style="font-weight:800;margin-bottom:8px">現場を追加</div>
+      <div class="grid">
+        <input id="s-name" placeholder="現場名（必須）">
+        <input id="s-addr" placeholder="住所">
+        <input id="s-token" placeholder="QRトークン（空欄=自動）">
+        <input id="s-lat" placeholder="緯度(任意)">
+        <input id="s-lng" placeholder="経度(任意)">
+        <input id="s-radius" placeholder="半径m(既定150)">
+      </div>
+      <button class="btn dark" style="margin-top:10px" onclick="createSite()">現場を追加してQR発行</button>
+    </div>
+  </div></div>
+</div>
+<script>
+var BASE="https://cdrobplodkxyagzyzvpq.supabase.co/functions/v1";
+var ANON="sb_publishable_cEnH7Mug8B7O8JtgSIauMw_MjlVxhW5";
+var PAGES="https://toyama2026.github.io/genba-works-liff";
+function getKey(){var k=localStorage.getItem("genba_dash_key");if(!k){k=prompt("監督パスコードを入力してください");if(k)localStorage.setItem("genba_dash_key",k);}return k;}
+function av(n){return (n||"?").trim().charAt(0);}
+function el(id){return document.getElementById(id);}
+function hdrs(){return {"apikey":ANON,"Authorization":"Bearer "+ANON,"x-dash-key":getKey(),"Content-Type":"application/json"};}
+async function load(){
+  var key=getKey();if(!key)return;
+  try{
+    var r=await fetch(BASE+"/genba-admin",{headers:hdrs()});
+    if(r.status===401){localStorage.removeItem("genba_dash_key");alert("パスコードが違います");return;}
+    var j=await r.json();if(!j.ok)throw new Error(j.error||"error");
+    // pending
+    var p="";if(!j.pending.length)p='<div class="empty">承認待ちはありません</div>';
+    j.pending.forEach(function(x){
+      p+='<div class="row"><span class="av">'+av(x.name)+'</span><div><div class="nm">'+(x.name||'(名前なし)')+'</div><div class="muted">'+x.line_user_id+'</div></div>'
+        +'<input id="c_'+x.line_user_id+'" placeholder="所属会社" style="width:120px"><input id="t_'+x.line_user_id+'" placeholder="職種" style="width:100px">'
+        +'<button class="btn" style="margin-left:auto" onclick=\'approveW("'+x.line_user_id+'","'+(x.name||'').replace(/"/g,'')+'")\'>承認登録</button></div>';
+    });
+    el("pending").innerHTML=p;
+    // workers
+    var w="";if(!j.workers.length)w='<div class="empty">職人がいません</div>';
+    j.workers.forEach(function(x){
+      w+='<div class="row"><span class="av">'+av(x.name)+'</span><div><div class="nm">'+x.name+'</div><div class="muted">'+(x.company_name||'')+(x.trade?(' / '+x.trade):'')+'</div></div>'
+        +'<span class="tagpill '+(x.is_active?'on':'off')+'" style="margin-left:auto">'+(x.is_active?'有効':'停止')+'</span>'
+        +'<button class="btn gh" onclick=\'toggleW("'+x.id+'",'+(!x.is_active)+')\'>'+(x.is_active?'停止':'有効化')+'</button></div>';
+    });
+    el("workers").innerHTML=w;
+    // sites
+    var s="";if(!j.sites.length)s='<div class="empty">現場がありません</div>';
+    j.sites.forEach(function(x){
+      var qurl=PAGES+"/site.html?token="+encodeURIComponent(x.qr_token||'')+"&name="+encodeURIComponent(x.name||'');
+      s+='<div class="row"><div style="flex:1"><div class="nm">'+x.name+'</div><div class="muted">QR: '+(x.qr_token||'-')+(x.lat?(' / GPS '+x.lat+','+x.lng):'')+' / 半径'+(x.radius_m||150)+'m</div></div>'
+        +'<a class="qrlink" href="'+qurl+'" target="_blank">掲示用QRを開く →</a></div>';
+    });
+    el("siteList").innerHTML=s;
+  }catch(e){alert("エラー: "+(e.message||e));}
+}
+async function post(body){var r=await fetch(BASE+"/genba-admin",{method:"POST",headers:hdrs(),body:JSON.stringify(body)});var j=await r.json();if(!j.ok){alert("失敗: "+(j.error||""));return null;}return j;}
+async function approveW(uid,name){var c=el("c_"+uid),t=el("t_"+uid);if(await post({action:"approve_worker",line_user_id:uid,name:name,company_name:c?c.value:"",trade:t?t.value:""}))load();}
+async function toggleW(id,active){if(await post({action:"toggle_worker",worker_id:id,is_active:active}))load();}
+async function createSite(){
+  var name=el("s-name").value.trim();if(!name){alert("現場名は必須です");return;}
+  var body={action:"create_site",name:name,address:el("s-addr").value.trim(),qr_token:el("s-token").value.trim()};
+  var lat=parseFloat(el("s-lat").value),lng=parseFloat(el("s-lng").value),rad=parseInt(el("s-radius").value);
+  if(!isNaN(lat))body.lat=lat;if(!isNaN(lng))body.lng=lng;if(!isNaN(rad))body.radius_m=rad;
+  var j=await post(body);if(j){alert("追加しました：QRトークン "+j.site.qr_token);load();}
+}
+load();
+</script>
+</body>
+</html>
