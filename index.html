@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ja"><head>
+<html lang="ja">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>現場WORKS 打刻</title>
@@ -23,26 +24,103 @@ select{width:100%;padding:13px;border:1px solid var(--bd);border-radius:12px;fon
 .note{font-size:11.5px;color:var(--sub);text-align:center;margin-top:10px}
 .err{color:var(--warn);font-weight:700}
 .uid{font-size:12px;background:#fff7e6;border:1px solid #ffe3a3;border-radius:10px;padding:10px;margin-top:10px;word-break:break-all;display:none}
-</style></head><body>
+</style>
+</head>
+<body>
 <h1>👷 現場WORKS 打刻 <span class="who" id="who">…</span></h1>
-<div class="card"><label>現場</label>
-<select id="site"><option value="11111111-1111-1111-1111-111111111111">パークホームズ青葉台 新築</option></select>
-<div style="margin-top:12px"><span class="badge b-mut" id="gpsBadge">📍 GPS未取得</span><span class="badge b-mut" id="qrBadge">QR未読取</span></div>
-<div class="row" style="margin-top:12px"><button class="btn btn-gh" onclick="getGPS()">📍 GPS取得</button><button class="btn btn-gh" onclick="scanQR()">▦ QR読取</button></div></div>
-<div class="card"><label>打刻</label>
-<button class="btn btn-in" id="inBtn" onclick="punch('in')">入場を打刻</button>
-<button class="btn btn-out" id="outBtn" onclick="punch('out')">退場を打刻</button></div>
-<div class="card"><label>状態</label><div class="log" id="log">初期化中…</div>
-<div class="uid" id="uid"></div></div>
+<div class="card">
+  <label>現場</label>
+  <select id="site"><option value="11111111-1111-1111-1111-111111111111">パークホームズ青葉台 新築</option></select>
+  <div style="margin-top:12px"><span class="badge b-mut" id="gpsBadge">📍 GPS未取得</span><span class="badge b-mut" id="qrBadge">QR未読取</span></div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn btn-gh" onclick="getGPS()">📍 GPS取得</button>
+    <button class="btn btn-gh" onclick="scanQR()">▦ QR読取</button>
+  </div>
+</div>
+<div class="card">
+  <label>打刻</label>
+  <button class="btn btn-in" id="inBtn" onclick="punch('in')">入場を打刻</button>
+  <button class="btn btn-out" id="outBtn" onclick="punch('out')">退場を打刻</button>
+</div>
+<div class="card">
+  <label>状態</label>
+  <div class="log" id="log">初期化中…</div>
+  <div class="uid" id="uid"></div>
+</div>
 <div class="note">公式LINEミニアプリ / 打刻はSupabase(genba)へ記録</div>
+
 <script>
-var LIFF_ID="2010459645-nZrNO9J0",PUNCH_URL="https://cdrobplodkxyagzyzvpq.supabase.co/functions/v1/punch",ANON_KEY="sb_publishable_cEnH7Mug8B7O8JtgSIauMw_MjlVxhW5";
-var idToken=null,gps=null,qr=null,myUid=null;
-function log(m,e){document.getElementById('log').innerHTML=e?'<span class="err">'+m+'</span>':m;}
-function showUid(u){var el=document.getElementById('uid');el.style.display='block';el.innerHTML='あなたのLINE userId（未登録なら監督に伝えて登録）:<br><b>'+u+'</b>';}
-async function boot(){try{await liff.init({liffId:LIFF_ID});if(!liff.isLoggedIn()){liff.login();return;}var p=await liff.getProfile();myUid=p.userId;document.getElementById('who').textContent=p.displayName+" さん";idToken=liff.getIDToken();showUid(p.userId);log("準備OK。GPS取得またはQR読取のあと、入場/退場を押してください。");}catch(e){log("LIFF初期化エラー: "+(e.message||e),1);}}
-function getGPS(){if(!navigator.geolocation){log("GPS非対応。",1);return;}log("GPS取得中…");navigator.geolocation.getCurrentPosition(function(pos){gps={lat:pos.coords.latitude,lng:pos.coords.longitude};var b=document.getElementById('gpsBadge');b.className='badge b-gps';b.textContent='📍 GPS取得済';log("GPS: "+gps.lat.toFixed(5)+", "+gps.lng.toFixed(5));},function(err){log("GPS取得失敗: "+err.message,1);},{enableHighAccuracy:true,timeout:8000});}
-async function scanQR(){try{if(!liff.scanCodeV2){log("QRはミニアプリ設定でScan QRをONにすると使えます。今はGPSを使ってください。",1);return;}var r=await liff.scanCodeV2();qr=r.value;var b=document.getElementById('qrBadge');b.className='badge b-ok';b.textContent='✓ QR読取済';log("QR: "+qr);}catch(e){log("QR読取失敗: "+(e.message||e),1);}}
-async function punch(type){if(!idToken){log("LINEログインが必要。",1);return;}var site=document.getElementById('site').selectedOptions[0];var method=qr?"qr":(gps?"gps":null);if(!method){log("先にQR読取またはGPS取得を。",1);return;}var body={id_token:idToken,site_id:site.value,type:type,method:method};if(method==="qr")body.qr_token=qr;if(method==="gps"){body.lat=gps.lat;body.lng=gps.lng;}document.getElementById('inBtn').disabled=document.getElementById('outBtn').disabled=true;log((type==='in'?'入場':'退場')+"を送信中…");try{var res=await fetch(PUNCH_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":ANON_KEY,"Authorization":"Bearer "+ANON_KEY},body:JSON.stringify(body)});var j=await res.json();if(j.ok){log("✅ "+(type==='in'?'入場':'退場')+"を記録しました\n"+new Date(j.attendance.occurred_at).toLocaleString('ja-JP'));}else if(j.error==='worker_not_found'){log("❌ 未登録の職人です。下記userIdを監督に伝えて登録してもらってください。",1);if(j.line_user_id)showUid(j.line_user_id);}else{log("❌ 失敗: "+(j.error||JSON.stringify(j))+(j.dist?(" ("+j.dist+"m)"):""),1);}}catch(e){log("通信エラー: "+(e.message||e),1);}finally{document.getElementById('inBtn').disabled=document.getElementById('outBtn').disabled=false;}}
+var LIFF_ID = "2010459645-nZrNO9J0";
+var PUNCH_URL = "https://cdrobplodkxyagzyzvpq.supabase.co/functions/v1/punch";
+var ANON_KEY = "sb_publishable_cEnH7Mug8B7O8JtgSIauMw_MjlVxhW5";
+var idToken = null, gps = null, qr = null, myUid = null;
+
+function log(m, e){ document.getElementById('log').innerHTML = e ? '<span class="err">'+m+'</span>' : m; }
+function showUid(u){ var el=document.getElementById('uid'); el.style.display='block'; el.innerHTML='あなたのLINE userId（未登録なら監督に伝えて登録）:<br><b>'+u+'</b>'; }
+
+async function boot(){
+  try{
+    await liff.init({ liffId: LIFF_ID });
+    if(!liff.isLoggedIn()){ liff.login(); return; }
+    var p = await liff.getProfile();
+    myUid = p.userId;
+    document.getElementById('who').textContent = p.displayName + " さん";
+    idToken = liff.getIDToken();
+    showUid(p.userId);
+    log("準備OK。GPS取得またはQR読取のあと、入場/退場を押してください。");
+  }catch(e){ log("LIFF初期化エラー: " + (e && e.message ? e.message : e), 1); }
+}
+
+function getGPS(){
+  if(!navigator.geolocation){ log("GPS非対応です。", 1); return; }
+  log("GPS取得中…");
+  navigator.geolocation.getCurrentPosition(function(pos){
+    gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    var b = document.getElementById('gpsBadge'); b.className='badge b-gps'; b.textContent='📍 GPS取得済';
+    log("GPS: " + gps.lat.toFixed(5) + ", " + gps.lng.toFixed(5));
+  }, function(err){ log("GPS取得失敗: " + err.message, 1); }, { enableHighAccuracy:true, timeout:8000 });
+}
+
+async function scanQR(){
+  try{
+    if(!liff.scanCodeV2){ log("QRはミニアプリ設定でScan QRをONにすると使えます。今はGPSを使ってください。", 1); return; }
+    var r = await liff.scanCodeV2();
+    qr = r.value;
+    var b = document.getElementById('qrBadge'); b.className='badge b-ok'; b.textContent='✓ QR読取済';
+    log("QR: " + qr);
+  }catch(e){ log("QR読取失敗: " + (e && e.message ? e.message : e), 1); }
+}
+
+async function punch(type){
+  if(!idToken){ log("LINEログインが必要です。", 1); return; }
+  var site = document.getElementById('site').selectedOptions[0];
+  var method = qr ? "qr" : (gps ? "gps" : null);
+  if(!method){ log("先にQR読取またはGPS取得をしてください。", 1); return; }
+  var body = { id_token: idToken, site_id: site.value, type: type, method: method };
+  if(method === "qr") body.qr_token = qr;
+  if(method === "gps"){ body.lat = gps.lat; body.lng = gps.lng; }
+  document.getElementById('inBtn').disabled = document.getElementById('outBtn').disabled = true;
+  log((type==='in'?'入場':'退場') + "を送信中…");
+  try{
+    var res = await fetch(PUNCH_URL, {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "apikey":ANON_KEY, "Authorization":"Bearer "+ANON_KEY },
+      body: JSON.stringify(body)
+    });
+    var j = await res.json();
+    if(j.ok){
+      log("✅ " + (type==='in'?'入場':'退場') + "を記録しました\n" + new Date(j.attendance.occurred_at).toLocaleString('ja-JP'));
+    } else if(j.error === 'worker_not_found'){
+      log("❌ 未登録の職人です。下記userIdを監督に伝えて登録してもらってください。", 1);
+      if(j.line_user_id) showUid(j.line_user_id);
+    } else {
+      log("❌ 失敗: " + (j.error || JSON.stringify(j)) + (j.dist ? (" ("+j.dist+"m)") : ""), 1);
+    }
+  }catch(e){ log("通信エラー: " + (e && e.message ? e.message : e), 1); }
+  finally{ document.getElementById('inBtn').disabled = document.getElementById('outBtn').disabled = false; }
+}
+
 boot();
-</scr"+"ipt></body></html>
+</script>
+</body>
+</html>
