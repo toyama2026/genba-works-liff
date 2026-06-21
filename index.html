@@ -134,6 +134,32 @@ svg{display:block}
         <button class="btn btn-in" style="width:auto;padding:13px 18px;flex-direction:row" onclick="sendChat()">送信</button>
       </div>
     </div>
+
+    <div class="view" id="v-sched">
+      <div class="sec">予定を登録（期間でまとめて）</div>
+      <div class="card">
+        <label style="display:block;font-size:12px;color:var(--sub);font-weight:700;margin-bottom:6px">現場</label>
+        <select id="sc-site" style="width:100%;padding:12px;border:1px solid var(--bd);border-radius:11px;font:inherit;font-size:15px;background:#fff"></select>
+        <div style="height:12px"></div>
+        <label style="display:block;font-size:12px;color:var(--sub);font-weight:700;margin-bottom:6px">担当工事</label>
+        <select id="sc-trade" style="width:100%;padding:12px;border:1px solid var(--bd);border-radius:11px;font:inherit;font-size:15px;background:#fff"></select>
+        <div style="height:12px"></div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:1"><label style="display:block;font-size:12px;color:var(--sub);font-weight:700;margin-bottom:6px">開始日</label><input type="date" id="sc-start" style="width:100%;padding:11px;border:1px solid var(--bd);border-radius:11px;font:inherit;font-size:14px"></div>
+          <div style="flex:1"><label style="display:block;font-size:12px;color:var(--sub);font-weight:700;margin-bottom:6px">終了日</label><input type="date" id="sc-end" style="width:100%;padding:11px;border:1px solid var(--bd);border-radius:11px;font:inherit;font-size:14px"></div>
+        </div>
+        <div style="height:12px"></div>
+        <div style="display:flex;gap:10px">
+          <div style="flex:0 0 90px"><label style="display:block;font-size:12px;color:var(--sub);font-weight:700;margin-bottom:6px">人数(任意)</label><input id="sc-head" type="number" inputmode="numeric" style="width:100%;padding:11px;border:1px solid var(--bd);border-radius:11px;font:inherit;font-size:14px"></div>
+          <div style="flex:1"><label style="display:block;font-size:12px;color:var(--sub);font-weight:700;margin-bottom:6px">備考(任意)</label><input id="sc-note" style="width:100%;padding:11px;border:1px solid var(--bd);border-radius:11px;font:inherit;font-size:14px"></div>
+        </div>
+        <div style="height:14px"></div>
+        <button class="btn btn-in" id="sc-btn" onclick="createSched()" style="flex-direction:row">予定を登録</button>
+        <div class="status" id="sc-status" style="margin-top:12px;display:none"><span class="dot"></span><span class="msg" id="sc-msg"></span></div>
+      </div>
+      <div class="sec">今後の予定（入らない日はタップで切替）</div>
+      <div id="schedList"><div class="spin">読込中…</div></div>
+    </div>
   </div>
 </div>
 
@@ -160,6 +186,7 @@ svg{display:block}
 
 <div class="nav">
   <button class="on" id="nav-punch" onclick="go('punch')"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>打刻</button>
+  <button id="nav-sched" onclick="go('sched')"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>予定</button>
   <button id="nav-report" onclick="go('report')"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>日報</button>
   <button id="nav-chat" onclick="go('chat')"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>チャット</button>
   <button id="nav-hist" onclick="go('hist')"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V11M10 19V5M16 19v-6M3 21h18"/></svg>履歴</button>
@@ -179,7 +206,7 @@ function setStatus(m,k){var s=document.getElementById('status');s.className='sta
 function showUid(u){var el=document.getElementById('uid');el.style.display='block';el.innerHTML='未登録のようです。下記の LINE userId を監督に伝えて登録してください：<br><b>'+u+'</b>';}
 function setButtons(on){document.getElementById('inBtn').disabled=!on;document.getElementById('outBtn').disabled=!on;document.getElementById('hint').textContent=on?'入場 / 退場 を押してください':'先にQRコードを読み取ってください';}
 function setSite(n,done){document.getElementById('siteName').textContent=n;document.getElementById('siteBox').className='site-box '+(done?'done':'pending');document.getElementById('siteIc').innerHTML=done?ICON_CHK:ICON_PIN;}
-function go(v){['punch','report','hist','chat'].forEach(function(x){document.getElementById('v-'+x).classList.toggle('on',v===x);document.getElementById('nav-'+x).classList.toggle('on',v===x);});if(v==='chat'){startChat();}else{stopChat();}}
+function go(v){['punch','sched','report','chat','hist'].forEach(function(x){document.getElementById('v-'+x).classList.toggle('on',v===x);document.getElementById('nav-'+x).classList.toggle('on',v===x);});if(v==='chat'){startChat();}else{stopChat();}if(v==='sched'){loadSched();}}
 function fmtT(iso){if(!iso)return'–';return new Date(iso).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});}
 
 async function boot(){
@@ -246,6 +273,54 @@ async function register(){
     if(j.ok){ document.getElementById('reg').style.display='none'; setStatus('登録しました。QRを読み取って打刻できます。','ok'); loadMe(); }
     else{ regStatus('登録に失敗しました（'+(j.error||'')+'）','err'); document.getElementById('reg-btn').disabled=false; }
   }catch(e){ regStatus('通信エラー: '+(e&&e.message?e.message:e),'err'); document.getElementById('reg-btn').disabled=false; }
+}
+/* ---- 予定 ---- */
+function scStatus(m,k){var s=document.getElementById('sc-status');s.style.display='flex';s.className='status'+(k?' '+k:'');document.getElementById('sc-msg').textContent=m;}
+function wd(ymd){return '日月火水木金土'[new Date(ymd+'T00:00:00+09:00').getDay()];}
+async function loadSched(){
+  try{
+    var r=await fetch(BASE+'/genba-schedule',{method:'POST',headers:H,body:JSON.stringify({mode:'list_mine',id_token:idToken})});
+    var j=await r.json();
+    if(!j.ok){ if(j.error==='worker_not_found'){document.getElementById('schedList').innerHTML='<div class="spin">先に登録してください。</div>';} return; }
+    var ss=document.getElementById('sc-site');
+    if(ss.options.length===0){ (j.sites||[]).forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;ss.appendChild(o);}); var ts=document.getElementById('sc-trade'); TRADES.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;ts.appendChild(o);}); }
+    renderSched(j.schedules);
+  }catch(e){}
+}
+function renderSched(list){
+  var el=document.getElementById('schedList');
+  if(!list||!list.length){el.innerHTML='<div class="spin">今後の予定はありません。</div>';return;}
+  var html='';
+  list.forEach(function(s){
+    html+='<div class="card" style="padding:14px"><div style="font-weight:800;font-size:15px">'+s.site+'</div>';
+    html+='<div style="color:var(--sub);font-size:12px;margin:2px 0 10px">'+(s.trade||'')+' / '+s.start_date+'〜'+s.end_date+(s.headcount?(' / '+s.headcount+'名'):'')+(s.note?(' / '+s.note):'')+'</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:7px">';
+    s.days.forEach(function(d){
+      var dec=d.status==='declined'; var bg=dec?'#fdecea':'#e7f8ef', col=dec?'#cf3a31':'#0a8f4f';
+      var label=parseInt(d.date.slice(5,7))+'/'+parseInt(d.date.slice(8,10))+'('+wd(d.date)+')';
+      html+='<span onclick=\'toggleDay("'+s.id+'","'+d.date+'",'+(!dec)+')\' style="cursor:pointer;font-size:12px;font-weight:700;padding:6px 10px;border-radius:10px;background:'+bg+';color:'+col+'">'+label+(dec?' 入らない':'')+'</span>';
+    });
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+async function toggleDay(id,date,decline){ try{ await fetch(BASE+'/genba-schedule',{method:'POST',headers:H,body:JSON.stringify({mode:'toggle',id_token:idToken,schedule_id:id,date:date,decline:decline})}); loadSched(); }catch(e){} }
+async function createSched(){
+  var site=document.getElementById('sc-site').value, trade=document.getElementById('sc-trade').value;
+  var start=document.getElementById('sc-start').value, end=document.getElementById('sc-end').value;
+  var head=document.getElementById('sc-head').value, note=document.getElementById('sc-note').value.trim();
+  if(!site||!start||!end){scStatus('現場と期間を入力してください。','err');return;}
+  if(start>end){scStatus('終了日は開始日以降にしてください。','err');return;}
+  document.getElementById('sc-btn').disabled=true; scStatus('登録中…','busy');
+  try{
+    var body={mode:'create',id_token:idToken,site_id:site,trade:trade,start_date:start,end_date:end,note:note};
+    if(head)body.headcount=parseInt(head);
+    var r=await fetch(BASE+'/genba-schedule',{method:'POST',headers:H,body:JSON.stringify(body)});
+    var j=await r.json();
+    if(j.ok){ scStatus('予定を登録しました。','ok'); document.getElementById('sc-note').value=''; loadSched(); }
+    else{ scStatus('登録に失敗（'+(j.error||'')+'）','err'); }
+  }catch(e){ scStatus('通信エラー','err'); }
+  finally{ document.getElementById('sc-btn').disabled=false; }
 }
 /* ---- 現場チャット ---- */
 var chatTimer=null, chatMine=null, chatSince=null, chatInited=false;
