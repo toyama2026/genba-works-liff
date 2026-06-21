@@ -93,7 +93,8 @@ async function load(){
     if(!j.reports.length) rp='<div class="empty">日報はまだありません</div>';
     for(var i=0;i<j.reports.length;i++){var d=j.reports[i];
       var tags=(d.ai_tags||[]).map(function(t){var c=(t==='安全'?'warn':(t==='不具合'||t==='資材不足'||t==='追加要望'?'amber':''));return '<span class="tag '+c+'">'+t+'</span>';}).join('');
-      rp+='<div class="rep"><div class="h"><span class="nm">'+d.name+'</span><span class="si">／'+d.site+'</span><span style="margin-left:auto;color:#6b7280;font-size:12px">'+d.date+'</span></div><div class="sum">'+(d.ai_summary||d.body||'(本文なし)')+'</div><div class="tags">'+tags+'</div></div>';
+      var ph=(d.photos||[]).map(function(u){return '<img src="'+u+'" style="width:62px;height:62px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)">';}).join('');
+      rp+='<div class="rep"><div class="h"><span class="nm">'+d.name+'</span><span class="si">／'+d.site+'</span><span style="margin-left:auto;color:#6b7280;font-size:12px">'+d.date+'</span></div><div class="sum">'+(d.ai_summary||d.body||'(本文なし)')+'</div>'+(ph?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+ph+'</div>':'')+'<div class="tags">'+tags+'</div></div>';
     }
     el("reports").innerHTML=rp;
   }catch(e){ el("upd").textContent="エラー: "+(e.message||e); }
