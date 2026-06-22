@@ -68,6 +68,7 @@ svg{display:block}
       <div class="brand">現場WORKS<small>GENBA WORKS</small></div>
       <div class="me"><span class="av" id="av">…</span><span id="who">読込中</span></div>
     </div>
+    <div id="envbadge" style="display:none;margin-top:8px;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;background:#fff7e6;color:#b45309;border:1px solid #f5d98a">テスト中 (dev)</div>
     <div class="statuschip" id="chip"><span class="pip"></span><span id="chipText">状態を確認中…</span></div>
   </div>
 
@@ -229,6 +230,7 @@ async function loadMe(){
   try{
     var r=await fetch(BASE+"/genba-me",{method:"POST",headers:H,body:JSON.stringify({id_token:idToken})});
     var j=await r.json();
+    var eb=document.getElementById('envbadge'); if(eb) eb.style.display=(j.env==='dev')?'inline-block':'none';
     if(!j.ok){ if(j.error==='worker_not_found'){ showReg(j.companies||[]); setChip('未登録'); } return; }
     document.getElementById('reg').style.display='none';
     var t=j.today;
