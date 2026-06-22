@@ -13,7 +13,7 @@ body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic U
 .top b{font-size:16px}.top .upd{margin-left:auto;font-size:12px;color:var(--sub)}
 .refresh{border:1px solid var(--bd);background:#fff;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer}
 .wrap{max-width:1100px;margin:0 auto;padding:20px}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px}
 .stat{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:16px}
 .stat .l{font-size:12.5px;color:var(--sub);font-weight:600}.stat .n{font-size:34px;font-weight:800;margin-top:6px;line-height:1}.stat .n small{font-size:15px;color:var(--sub);font-weight:700;margin-left:3px}
 .stat.warn{border-color:#f3c3bf;background:var(--warnbg)}.stat.warn .n{color:var(--warn)}
@@ -47,6 +47,14 @@ body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic U
     <div class="stat"><div class="l">稼働現場</div><div class="n"><span id="s-sites">–</span><small>現場</small></div></div>
     <div class="stat warn"><div class="l">未退場</div><div class="n"><span id="s-unclosed">–</span><small>件</small></div></div>
     <div class="stat amber"><div class="l">要対応の日報</div><div class="n"><span id="s-risk">–</span><small>件</small></div></div>
+    <div class="stat amber"><div class="l">明日の未確認</div><div class="n"><span id="s-confirm">–</span><small>名</small></div></div>
+    <div class="stat warn"><div class="l">本日の未打刻</div><div class="n"><span id="s-noclockin">–</span><small>名</small></div></div>
+  </div>
+  <div class="panel" style="margin-bottom:18px">
+    <div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>明日の予定確認<span id="confirm-rate" style="font-size:12px;color:var(--sub);font-weight:600;margin-left:8px"></span></div>
+    <div class="pc" id="confirm-list"><div class="empty">読込中…</div></div>
+    <div class="ph" style="border-top:1px solid var(--bd)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>本日の未打刻</div>
+    <div class="pc" id="noclockin-list"><div class="empty">–</div></div>
   </div>
   <div class="grid">
     <div class="panel"><div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M4 21V5l8-3v19"/><path d="M12 8l8 3v10"/><path d="M4 21h17M8 7v.01M8 11v.01M8 15v.01"/></svg>在場状況</div><div class="pc" id="bysite"><div class="empty">読込中…</div></div>
@@ -149,6 +157,22 @@ async function load(){
       rp+='<div class="rep"><div class="h"><span class="nm">'+d.name+'</span><span class="si">／'+d.site+'</span><span style="margin-left:auto;color:#6b7280;font-size:12px">'+d.date+'</span></div><div class="sum">'+(d.ai_summary||d.body||'(本文なし)')+'</div>'+(ph?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+ph+'</div>':'')+'<div class="tags" style="align-items:center">'+tags+actBtn+'</div></div>';
     }
     el("reports").innerHTML=rp;
+    // 明日の予定確認
+    var ct=j.confirm_tomorrow||{total:0,confirmed:0,unconfirmed:[],date:""};
+    var ctu=ct.unconfirmed||[];
+    el("s-confirm").textContent=ctu.length;
+    el("confirm-rate").textContent=ct.total?('確認 '+ct.confirmed+' / '+ct.total+'　'+(ct.date||'')):'対象なし';
+    var cl="";
+    if(!ct.total) cl='<div class="empty">明日の予定はありません</div>';
+    else if(!ctu.length) cl='<div class="empty" style="color:var(--ok)">全員が確認済みです</div>';
+    else for(var i=0;i<ctu.length;i++){var x=ctu[i]; cl+='<div class="wkr"><span class="av">'+av(x.name)+'</span>'+x.name+'<span style="color:#6b7280;font-size:12px">'+x.site+'</span><span class="tm" style="color:var(--amber)">未確認</span></div>';}
+    el("confirm-list").innerHTML=cl;
+    // 本日の未打刻
+    var nc=j.no_clockin_today||[]; el("s-noclockin").textContent=nc.length;
+    var nl="";
+    if(!nc.length) nl='<div class="empty">未打刻はありません</div>';
+    else for(var i=0;i<nc.length;i++){var y=nc[i]; nl+='<div class="wkr"><span class="av">'+av(y.name)+'</span>'+y.name+'<span style="color:#6b7280;font-size:12px">'+y.site+'</span><span class="tm" style="color:var(--warn)">出勤打刻なし</span></div>';}
+    el("noclockin-list").innerHTML=nl;
     var sel=el("chatSiteSel");
     if(sel.options.length===0 && j.sites && j.sites.length){ j.sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);}); chatSwitch(); }
     schedLoad();
