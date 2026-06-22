@@ -65,6 +65,7 @@ body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic U
   </div>
   <div class="panel" style="margin-top:18px"><div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>依頼主への報告（担当承認）<span style="font-size:11px;color:var(--sub);font-weight:600;margin-left:8px">OKで依頼主へ送信されます（通知経路設定後）</span></div><div class="pc" id="creports"><div class="empty">読込中…</div></div></div>
   <div class="panel" style="margin-top:18px"><div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>本日の通知<span id="notif-sum" style="font-size:12px;color:var(--sub);font-weight:600;margin-left:8px"></span></div><div class="pc" id="notif"><div class="empty">読込中…</div></div></div>
+  <div class="panel" style="margin-top:18px"><div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>再送待ちの通知<span id="retry-sum" style="font-size:12px;color:var(--sub);font-weight:600;margin-left:8px"></span><button class="refresh" style="margin-left:auto" onclick="runRetry(this)">↻ 今すぐ再送</button></div><div class="pc" id="retry"><div class="empty">読込中…</div></div></div>
   <div class="panel" style="margin-top:18px"><div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>今後の予定（7日間）</div><div class="pc" id="sched"><div class="empty">読込中…</div></div></div>
   <div class="panel" style="margin-top:18px">
     <div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>現場チャット
@@ -85,6 +86,8 @@ var ANON="sb_publishable_cEnH7Mug8B7O8JtgSIauMw_MjlVxhW5";
 function getKey(){ var k=localStorage.getItem("genba_dash_key"); if(!k){ k=prompt("監督パスコードを入力してください"); if(k) localStorage.setItem("genba_dash_key",k); } return k; }
 function av(n){ return (n||"?").trim().charAt(0); }
 function fmtT(iso){ if(!iso) return "–"; return new Date(iso).toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"}); }
+function fmtDT(iso){ if(!iso) return "–"; var d=new Date(iso); return (d.getMonth()+1)+"/"+d.getDate()+" "+d.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"}); }
+async function runRetry(btn){ if(btn){btn.disabled=true;btn.textContent="再送中…";} try{ await act({action:"run_retry"}); }finally{ if(btn){btn.disabled=false;btn.textContent="↻ 今すぐ再送";} } }
 function el(id){ return document.getElementById(id); }
 async function exportCsv(){
   var key=getKey(); if(!key) return;
@@ -184,6 +187,18 @@ async function load(){
     if(!nf.length){ nh+='<div class="empty" style="color:var(--ok)">失敗した通知はありません</div>'; }
     else { for(var fi=0;fi<nf.length;fi++){var f=nf[fi]; nh+='<div class="wkr"><span class="tag warn">失敗</span><span style="font-weight:700">'+(f.type||'')+'</span><span style="color:#6b7280;font-size:12px">'+(f.destination||'')+'</span><span class="tm" style="color:var(--warn)">'+escc(f.error||'')+'</span></div>';} }
     el("notif").innerHTML=nh;
+    // 再送待ちの通知
+    var rq=j.retry_queue||[];
+    var pend=rq.filter(function(x){return !x.gaveup;}).length, gave=rq.filter(function(x){return x.gaveup;}).length;
+    el("retry-sum").textContent= rq.length ? ('待機 '+pend+(gave?(' / 打ち切り '+gave):'')) : '';
+    var rh='';
+    if(!rq.length){ rh='<div class="empty" style="color:var(--ok)">再送待ちはありません</div>'; }
+    else { for(var ri=0;ri<rq.length;ri++){ var q=rq[ri];
+      var badge= q.gaveup? '<span class="tag warn">打ち切り</span>' : (q.due? '<span class="tag amber">対象</span>' : '<span class="tag">待機</span>');
+      var when= q.gaveup? '' : ('<span class="tm">次回 '+fmtDT(q.next_retry_at)+'</span>');
+      rh+='<div class="wkr">'+badge+'<span style="font-weight:700">'+(q.type||'')+'</span><span style="color:#6b7280;font-size:12px">'+(q.name||'')+' ('+q.attempts+'/'+q.max+')</span>'+when+'</div>';
+    } }
+    el("retry").innerHTML=rh;
     var sel=el("chatSiteSel");
     if(sel.options.length===0 && j.sites && j.sites.length){ j.sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);}); chatSwitch(); }
     schedLoad();
