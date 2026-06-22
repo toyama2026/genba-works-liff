@@ -40,7 +40,7 @@ body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic U
 </style>
 </head>
 <body>
-<div class="top"><div class="lg">現</div><b>現場WORKS 監督ダッシュボード</b><span class="upd" id="upd">…</span><a class="refresh" href="admin.html" style="text-decoration:none;color:var(--ink)">⚙ 管理</a><button class="refresh" onclick="exportCsv()">⤓ 出面CSV</button><button class="refresh" onclick="load()">↻ 更新</button></div>
+<div class="top"><div class="lg">現</div><b>現場WORKS 監督ダッシュボード</b><span id="envbadge" style="display:none;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;background:#fff7e6;color:#b45309;border:1px solid #f5d98a">テスト中 (dev)</span><span class="upd" id="upd">…</span><a class="refresh" href="admin.html" style="text-decoration:none;color:var(--ink)">⚙ 管理</a><button class="refresh" onclick="exportCsv()">⤓ 出面CSV</button><button class="refresh" onclick="load()">↻ 更新</button></div>
 <div class="wrap">
   <div class="cards">
     <div class="stat"><div class="l">在場中の職人</div><div class="n"><span id="s-present">–</span><small>名</small></div></div>
@@ -117,6 +117,7 @@ async function load(){
     el("s-present").textContent=j.summary.present; el("s-sites").textContent=j.summary.sites_active;
     el("s-unclosed").textContent=j.summary.unclosed; el("s-risk").textContent=j.summary.risk;
     el("upd").textContent="更新 "+new Date(j.generated_at).toLocaleTimeString("ja-JP");
+    el("envbadge").style.display=(j.env==="dev")?"inline-block":"none";
     // bysite
     var h="";
     if(!j.bysite.length) h='<div class="empty">在場中の職人はいません</div>';
