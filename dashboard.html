@@ -64,6 +64,7 @@ body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic U
     <div class="panel"><div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>日報・AI要約</div><div class="pc" id="reports"><div class="empty">読込中…</div></div></div>
   </div>
   <div class="panel" style="margin-top:18px"><div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>依頼主への報告（担当承認）<span style="font-size:11px;color:var(--sub);font-weight:600;margin-left:8px">OKで依頼主へ送信されます（通知経路設定後）</span></div><div class="pc" id="creports"><div class="empty">読込中…</div></div></div>
+  <div class="panel" style="margin-top:18px"><div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>本日の通知<span id="notif-sum" style="font-size:12px;color:var(--sub);font-weight:600;margin-left:8px"></span></div><div class="pc" id="notif"><div class="empty">読込中…</div></div></div>
   <div class="panel" style="margin-top:18px"><div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>今後の予定（7日間）</div><div class="pc" id="sched"><div class="empty">読込中…</div></div></div>
   <div class="panel" style="margin-top:18px">
     <div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>現場チャット
@@ -173,6 +174,16 @@ async function load(){
     if(!nc.length) nl='<div class="empty">未打刻はありません</div>';
     else for(var i=0;i<nc.length;i++){var y=nc[i]; nl+='<div class="wkr"><span class="av">'+av(y.name)+'</span>'+y.name+'<span style="color:#6b7280;font-size:12px">'+y.site+'</span><span class="tm" style="color:var(--warn)">出勤打刻なし</span></div>';}
     el("noclockin-list").innerHTML=nl;
+    // 本日の通知
+    var nt=j.notifications||{total:0,success:0,failed:0,skipped:0,by_type:{},failures:[]};
+    el("notif-sum").textContent='成功 '+nt.success+' / 失敗 '+nt.failed+' / スキップ '+nt.skipped+'（計'+nt.total+'）';
+    var nh='';
+    var types=Object.keys(nt.by_type||{});
+    if(types.length){ nh+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px">'; for(var ti=0;ti<types.length;ti++){var t=types[ti],b=nt.by_type[t]; nh+='<span class="tag">'+t+' <b style="color:var(--ok)">'+b.success+'</b>'+(b.failed?' / <b style="color:var(--warn)">'+b.failed+'</b>':'')+(b.skipped?' / <span style="color:var(--sub)">'+b.skipped+'</span>':'')+'</span>';} nh+='</div>'; }
+    var nf=nt.failures||[];
+    if(!nf.length){ nh+='<div class="empty" style="color:var(--ok)">失敗した通知はありません</div>'; }
+    else { for(var fi=0;fi<nf.length;fi++){var f=nf[fi]; nh+='<div class="wkr"><span class="tag warn">失敗</span><span style="font-weight:700">'+(f.type||'')+'</span><span style="color:#6b7280;font-size:12px">'+(f.destination||'')+'</span><span class="tm" style="color:var(--warn)">'+escc(f.error||'')+'</span></div>';} }
+    el("notif").innerHTML=nh;
     var sel=el("chatSiteSel");
     if(sel.options.length===0 && j.sites && j.sites.length){ j.sites.forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);}); chatSwitch(); }
     schedLoad();
