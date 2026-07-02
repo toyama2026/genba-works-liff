@@ -110,7 +110,7 @@ svg{display:block}
     <div class="view" id="v-report">
       <div class="sec">本日の日報</div>
       <div class="card">
-        <div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:10px">写真</div>
+        <div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:10px">写真 <span style="font-weight:500">（サムネイルのラベルをタップで 施工前/施工中/完了 を切替）</span></div>
         <div id="thumbs" style="display:flex;gap:10px;flex-wrap:wrap"></div>
         <label style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;border:1.5px dashed var(--line);color:var(--line-d);background:#f3fcf6;border-radius:14px;padding:16px;font-size:14px;font-weight:700;cursor:pointer">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>写真を追加
@@ -390,11 +390,15 @@ async function punch(type){
 }
 
 /* ---- 日報 ---- */
-var photos=[];
+var photos=[];/* REA-119: {data, type} 形式。type=before|during|after */
+var PHOTO_TYPES=['during','before','after'];
+var PHOTO_TYPE_LABELS={before:'施工前',during:'施工中',after:'完了'};
+var PHOTO_TYPE_COLORS={before:'#2563eb',during:'#0a8f4f',after:'#b45309'};
 function repStatus(m,k){var s=document.getElementById('repStatus');s.className='status'+(k?' '+k:'');document.getElementById('repMsg').textContent=m;}
-function renderThumbs(){var t=document.getElementById('thumbs');t.innerHTML='';photos.forEach(function(p,i){var d=document.createElement('div');d.style.cssText='position:relative;width:78px;height:78px;border-radius:12px;overflow:hidden;border:1px solid var(--bd)';d.innerHTML='<img src="'+p+'" style="width:100%;height:100%;object-fit:cover">'+'<span onclick="removePhoto('+i+')" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#11181c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer">×</span>';t.appendChild(d);});}
+function cyclePhotoType(i){var cur=photos[i].type;var idx=PHOTO_TYPES.indexOf(cur);photos[i].type=PHOTO_TYPES[(idx+1)%PHOTO_TYPES.length];renderThumbs();}
+function renderThumbs(){var t=document.getElementById('thumbs');t.innerHTML='';photos.forEach(function(p,i){var d=document.createElement('div');d.style.cssText='position:relative;width:78px;height:92px;border-radius:12px;overflow:hidden;border:1px solid var(--bd)';d.innerHTML='<img src="'+p.data+'" style="width:100%;height:78px;object-fit:cover">'+'<span onclick="cyclePhotoType('+i+')" style="position:absolute;left:0;right:0;bottom:0;height:14px;line-height:14px;text-align:center;font-size:10px;font-weight:800;color:#fff;background:'+PHOTO_TYPE_COLORS[p.type]+';cursor:pointer">'+PHOTO_TYPE_LABELS[p.type]+'</span>'+'<span onclick="removePhoto('+i+')" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#11181c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer">×</span>';t.appendChild(d);});}
 function removePhoto(i){photos.splice(i,1);renderThumbs();}
-function addPhotos(ev){var files=ev.target.files;if(!files)return;Array.from(files).forEach(function(f){if(photos.length>=6)return;resizeImage(f,function(durl){photos.push(durl);renderThumbs();});});ev.target.value='';}
+function addPhotos(ev){var files=ev.target.files;if(!files)return;Array.from(files).forEach(function(f){if(photos.length>=6)return;resizeImage(f,function(durl){photos.push({data:durl,type:'during'});renderThumbs();});});ev.target.value='';}
 function resizeImage(file,cb){var img=new Image();var rd=new FileReader();rd.onload=function(){img.onload=function(){var max=1280;var w=img.width,h=img.height;if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.7));};img.src=rd.result;};rd.readAsDataURL(file);}
 async function submitReport(){
   if(!idToken){repStatus('LINEログインが必要です。','err');return;}
