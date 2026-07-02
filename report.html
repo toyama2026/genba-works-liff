@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>現場WORKS 日報</title>
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+:root{--line:#06c755;--warn:#e8453c;--ink:#1f2328;--sub:#6b7280;--bd:#e4e7eb;--ok:#0a8f4f;--blue:#2563eb}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;background:#eef1f4;color:var(--ink);padding:16px;max-width:480px;margin:0 auto}
+h1{font-size:16px;margin:6px 2px 14px;display:flex;align-items:center;gap:8px}
+.who{margin-left:auto;font-size:12px;color:var(--sub);font-weight:600}
+.card{background:#fff;border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:14px}
+label{font-size:12px;color:var(--sub);font-weight:700;display:block;margin:2px 2px 8px}
+textarea{width:100%;padding:13px;border:1px solid var(--bd);border-radius:12px;font:inherit;font-size:15px;min-height:96px;resize:vertical}
+select{width:100%;padding:12px;border:1px solid var(--bd);border-radius:12px;font:inherit;font-size:15px;background:#fff}
+.ptype{display:flex;align-items:center;gap:10px;padding:10px 0}
+.prow{border-bottom:1px dashed var(--bd);padding-bottom:8px;margin-bottom:2px}
+.prow:last-child{border-bottom:0;padding-bottom:0}
+.ptype .tag{flex:0 0 84px;font-size:13px;font-weight:800}
+.tag-b{color:var(--blue)}.tag-d{color:var(--ok)}.tag-a{color:#b45309}
+.ptype input[type=file]{display:none}
+.pickbtn{flex:1;border:1.5px dashed var(--bd);background:#fafbfc;border-radius:12px;padding:12px;font-size:14px;font-weight:700;color:var(--sub);cursor:pointer;text-align:center}
+.cnt{flex:0 0 52px;text-align:right;font-size:12px;color:var(--sub);font-weight:700}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 4px 94px}
+.thumbs:empty{margin:0}
+.thumb{width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}
+.total{font-size:12px;color:var(--sub);font-weight:700;text-align:right;margin-top:6px}
+.total.over{color:var(--warn)}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font-size:16px;font-weight:800;cursor:pointer;margin-top:10px}
+.btn-send{background:var(--line);color:#fff}
+.btn:active{filter:brightness(.95)}.btn:disabled{opacity:.5}
+.log{font-size:12.5px;line-height:1.6;background:#11181c;color:#cfe;border-radius:12px;padding:12px;white-space:pre-wrap;word-break:break-all;min-height:54px}
+.note{font-size:11.5px;color:var(--sub);text-align:center;margin-top:10px}
+.err{color:var(--warn);font-weight:700}
+</style>
+</head>
+<body>
+<h1>📝 現場WORKS 日報 <span class="who" id="who">…</span></h1>
+<div class="card"><label>現場</label>
+<select id="site"><option value="">打刻した現場（自動）</option></select>
+<div class="note" style="text-align:left;margin-top:6px">入場打刻済みならそのままでOK。未打刻のときは現場を選んでください。</div></div>
+<div class="card"><label>今日の作業内容・連絡事項</label>
+<textarea id="body" placeholder="例）2Fクロス施工完了。3F資材が不足しそうです。"></textarea></div>
+<div class="card"><label>写真（合計6枚まで・種別ごとに選択）</label>
+<div class="prow"><div class="ptype"><span class="tag tag-b">施工前</span><input type="file" id="f_before" accept="image/*" multiple><button class="pickbtn" onclick="pick('before')">＋ 写真を選ぶ</button><span class="cnt" id="c_before">0枚</span></div><div class="thumbs" id="p_before"></div></div>
+<div class="prow"><div class="ptype"><span class="tag tag-d">施工中</span><input type="file" id="f_during" accept="image/*" multiple><button class="pickbtn" onclick="pick('during')">＋ 写真を選ぶ</button><span class="cnt" id="c_during">0枚</span></div><div class="thumbs" id="p_during"></div></div>
+<div class="prow"><div class="ptype"><span class="tag tag-a">完了</span><input type="file" id="f_after" accept="image/*" multiple><button class="pickbtn" onclick="pick('after')">＋ 写真を選ぶ</button><span class="cnt" id="c_after">0枚</span></div><div class="thumbs" id="p_after"></div></div>
+<div class="total" id="total"></div>
+</div>
+<button class="btn btn-send" id="sendBtn" onclick="submitReport()">日報を提出</button>
+<div class="card" style="margin-top:14px"><label>状態</label><div class="log" id="log">初期化中…</div></div>
+<div class="note">写真はREALIFE-SKにも自動連携されます</div>
+<script>
+var LIFF_ID="2010459657-UpiLFD4E";
+var FN_BASE="https://cdrobplodkxyagzyzvpq.supabase.co/functions/v1";
+var SUBMIT_URL=FN_BASE+"/report-submit";
+var SITES_URL=FN_BASE+"/genba-report-liff?data=1";
+var ANON_KEY="sb_publishable_cEnH7Mug8B7O8JtgSIauMw_MjlVxhW5";
+var idToken=null,TYPES=["before","during","after"];
+function log(m,e){document.getElementById('log').innerHTML=e?'<span class="err">'+m+'</span>':m;}
+function pick(t){document.getElementById('f_'+t).click();}
+function totalCount(){var n=0;TYPES.forEach(function(t){n+=document.getElementById('f_'+t).files.length;});return n;}
+function renderTotal(){var n=totalCount();var el=document.getElementById('total');if(n===0){el.textContent='';el.className='total';return;}el.textContent='合計 '+n+'枚'+(n>6?'（6枚を超えた分は送信されません）':' / 6枚');el.className=n>6?'total over':'total';}
+function renderThumbs(t){var box=document.getElementById('p_'+t);box.innerHTML='';var fs=document.getElementById('f_'+t).files;for(var i=0;i<fs.length;i++){var img=document.createElement('img');img.className='thumb';img.src=URL.createObjectURL(fs[i]);box.appendChild(img);}}
+TYPES.forEach(function(t){document.getElementById('f_'+t).addEventListener('change',function(){document.getElementById('c_'+t).textContent=this.files.length+'枚';renderThumbs(t);renderTotal();});});
+async function loadSites(){try{var r=await fetch(SITES_URL,{headers:{"apikey":ANON_KEY,"Authorization":"Bearer "+ANON_KEY}});var j=await r.json();var sel=document.getElementById('site');(j.sites||[]).forEach(function(s){var o=document.createElement('option');o.value=s.id;o.textContent=s.name;sel.appendChild(o);});}catch(e){/* 現場リストが取れなくても打刻済みなら提出可 */}}
+function shrink(file){return new Promise(function(res){var img=new Image();var url=URL.createObjectURL(file);img.onload=function(){var MAX=1600;var w=img.width,h=img.height;if(Math.max(w,h)>MAX){var r=MAX/Math.max(w,h);w=Math.round(w*r);h=Math.round(h*r);}var cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);res(cv.toDataURL('image/jpeg',0.82));};img.onerror=function(){URL.revokeObjectURL(url);res(null);};img.src=url;});}
+async function collectPhotos(){var out=[];for(var i=0;i<TYPES.length;i++){var t=TYPES[i];var fs=document.getElementById('f_'+t).files;for(var j=0;j<fs.length;j++){if(out.length>=6)return out;var d=await shrink(fs[j]);if(d)out.push({data:d,type:t});}}return out;}
+async function boot(){try{await liff.init({liffId:LIFF_ID});if(!liff.isLoggedIn()){liff.login();return;}var p=await liff.getProfile();document.getElementById('who').textContent=p.displayName+" さん";idToken=liff.getIDToken();log("準備OK。作業内容と写真を入れて「日報を提出」を押してください。");loadSites();}catch(e){log("LIFF初期化エラー: "+(e.message||e),1);}}
+async function submitReport(){if(!idToken){log("LINEログインが必要。",1);return;}var body=document.getElementById('body').value.trim();var btn=document.getElementById('sendBtn');btn.disabled=true;log("写真を圧縮中…");try{var photos=await collectPhotos();if(!body&&photos.length===0){log("作業内容か写真のどちらかは入れてください。",1);btn.disabled=false;return;}log("送信中…（写真"+photos.length+"枚）");var payload={id_token:idToken,body:body||null,photos:photos};var sid=document.getElementById('site').value;if(sid)payload.site_id=sid;var res=await fetch(SUBMIT_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":ANON_KEY,"Authorization":"Bearer "+ANON_KEY},body:JSON.stringify(payload)});var j=await res.json();if(j.ok){log("✅ 日報を提出しました（写真"+j.report.photos+"枚）\n"+(j.report.ai_summary?("AI要約: "+j.report.ai_summary):""));TYPES.forEach(function(t){document.getElementById('f_'+t).value='';document.getElementById('c_'+t).textContent='0枚';document.getElementById('p_'+t).innerHTML='';});renderTotal();document.getElementById('body').value='';}else if(j.error==='punch_first'){log("❌ 入場打刻が見つかりません。上の「現場」で今日の現場を選んでからもう一度提出してください。",1);}else if(j.error==='worker_not_found'){log("❌ 未登録の職人です。監督に登録を依頼してください。",1);}else{log("❌ 失敗: "+(j.error||JSON.stringify(j)),1);}}catch(e){log("通信エラー: "+(e.message||e),1);}finally{btn.disabled=false;}}
+boot();
+</script>
+</body>
+</html>
