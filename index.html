@@ -109,6 +109,10 @@ svg{display:block}
 
     <div class="view" id="v-report">
       <div class="sec">本日の日報</div>
+      <div class="card" id="repSiteCard" style="display:none">
+        <div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:10px">現場（本日の打刻が無いため選択してください）</div>
+        <select id="repSite" style="width:100%;padding:13px;border:1px solid var(--bd);border-radius:12px;font:inherit;font-size:14px;background:#fff"><option value="">現場を選択…</option></select>
+      </div>
       <div class="card">
         <div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:10px">写真 <span style="font-weight:500">（サムネイルのラベルをタップで 施工前/施工中/完了 を切替）</span></div>
         <div id="thumbs" style="display:flex;gap:10px;flex-wrap:wrap"></div>
@@ -390,6 +394,17 @@ async function punch(type){
 }
 
 /* ---- 日報 ---- */
+var repSites=null;
+async function showRepSitePicker(){
+  var card=document.getElementById('repSiteCard');card.style.display='block';
+  if(repSites)return;
+  try{
+    var r=await fetch(BASE+'/genba-me',{method:'POST',headers:H,body:JSON.stringify({id_token:idToken})});
+    var j=await r.json();repSites=(j&&j.sites)||[];
+    var sel=document.getElementById('repSite');
+    repSites.forEach(function(st){var o=document.createElement('option');o.value=st.id;o.textContent=st.name;sel.appendChild(o);});
+  }catch(e){/* 選択肢が取れなくても手動再試行できるよう握りつぶす */}
+}
 var photos=[];/* REA-119: {data, type} 形式。type=before|during|after */
 var PHOTO_TYPES=['during','before','after'];
 var PHOTO_TYPE_LABELS={before:'施工前',during:'施工中',after:'完了'};
@@ -406,10 +421,11 @@ async function submitReport(){
   if(!body&&photos.length===0){repStatus('写真か作業内容を入力してください。','err');return;}
   document.getElementById('repSubmit').disabled=true;repStatus('提出中…','busy');
   try{
-    var res=await fetch(BASE+'/report-submit',{method:'POST',headers:H,body:JSON.stringify({id_token:idToken,body:body,photos:photos})});
+    var selSite=document.getElementById('repSite').value||null;
+    var res=await fetch(BASE+'/report-submit',{method:'POST',headers:H,body:JSON.stringify({id_token:idToken,body:body,photos:photos,site_id:selSite})});
     var j=await res.json();
     if(j.ok){repStatus('日報を提出しました（写真'+j.report.photos+'枚）。監督が確認します。','ok');loadMe();}
-    else if(j.error==='punch_first'){repStatus('先に現場で入場の打刻をしてください。','err');}
+    else if(j.error==='punch_first'){showRepSitePicker();repStatus('本日の打刻がありません。上の「現場」を選んでから提出してください。','err');}
     else if(j.error==='worker_not_found'){repStatus('未登録の職人です。監督に登録を依頼してください。','err');}
     else{repStatus('提出に失敗しました（'+(j.error||'unknown')+'）','err');}
   }catch(e){repStatus('通信エラー: '+(e&&e.message?e.message:e),'err');}
