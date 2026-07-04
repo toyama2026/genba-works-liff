@@ -55,6 +55,12 @@ svg{display:block}
 .sum .v{font-size:20px;font-weight:800}
 .sum .l{font-size:10px;color:var(--sub);font-weight:700}
 .sum .ar{color:#cbd2d8}
+/* チャット定型文（REA-182）・日報補助ボタン（REA-181） */
+.qtxt{flex:0 0 auto;border:1px solid var(--bd);background:#fff;border-radius:99px;padding:9px 14px;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer;white-space:nowrap;font-family:inherit}
+.qtxt:active{background:#f1f4f2}
+.tool2{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--bd);background:#fff;border-radius:12px;padding:12px 6px;font-size:12.5px;font-weight:800;color:var(--ink);cursor:pointer;font-family:inherit}
+.tool2:disabled{color:#aab2b9}
+.tool2.rec{background:#fdecea;border-color:#f6c8c4;color:#cf3a31}
 .body{padding:18px 16px 0}
 .view{display:none}.view.on{display:block}
 .sec{font-size:12px;font-weight:800;color:var(--sub);letter-spacing:.05em;margin:2px 4px 10px;display:flex;align-items:center;gap:7px}
@@ -224,8 +230,20 @@ input,select,textarea{font-size:16px !important}
       <div class="card">
         <div style="font-size:12px;color:var(--sub);font-weight:700;margin-bottom:10px">作業内容</div>
         <textarea id="repBody" placeholder="例）2階廊下のコーティング下塗りまで完了。乾燥待ち。脱衣所の床に目地割れを1箇所確認、写真添付。" style="width:100%;min-height:130px;border:1px solid var(--bd);border-radius:12px;padding:13px;font:inherit;font-size:14px;resize:none"></textarea>
+        <!-- REA-181: 音声入力とAI下書き（音声は非対応端末で非表示） -->
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="tool2" id="voiceBtn" onclick="toggleVoice()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg><span id="voiceLbl">音声で入力</span></button>
+          <button class="tool2" id="aiBtn" onclick="aiDraft()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.9 2.6L22.5 18.5l-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9z"/></svg><span id="aiLbl">AIで下書きを作成</span></button>
+        </div>
       </div>
-      <button class="btn btn-in" id="repSubmit" onclick="submitReport()" style="flex-direction:row">日報を提出する</button>
+      <button class="btn btn-in" id="repSubmit" onclick="showRepConfirm()" style="flex-direction:row">提出内容を確認する</button>
+      <!-- REA-181: 提出前確認 -->
+      <div class="card" id="repConfirm" style="display:none;margin-top:14px;border-color:#bfebd2">
+        <div style="font-size:12px;font-weight:800;color:var(--sub);margin-bottom:8px">提出内容の確認</div>
+        <div id="repcSummary" style="font-size:13px;line-height:1.9"></div>
+        <button class="btn btn-in" id="repcGo" onclick="submitReport()" style="flex-direction:row;margin-top:12px">この内容で提出する</button>
+        <button class="btn-ghost" onclick="hideRepConfirm()">修正する</button>
+      </div>
       <div class="status" id="repStatus" style="margin-top:14px"><span class="dot"></span><span class="msg" id="repMsg">写真と作業内容を入力して提出してください。</span></div>
       <div class="foot">提出後は監督が内容を確認します</div>
     </div>
@@ -234,6 +252,13 @@ input,select,textarea{font-size:16px !important}
       <div class="sec">現場チャット</div>
       <div id="chatSite" style="margin:0 4px 10px;color:var(--sub);font-size:12px;font-weight:600">…</div>
       <div id="chatBox" style="background:#fff;border:1px solid var(--bd);border-radius:16px;padding:12px;min-height:280px;max-height:54vh;overflow:auto;display:flex;flex-direction:column;gap:9px"><div class="spin">読込中…</div></div>
+      <!-- REA-182: 定型文（タップで入力欄へ。送信前に編集可能） -->
+      <div style="display:flex;gap:7px;overflow-x:auto;margin-top:10px;padding-bottom:2px">
+        <button class="qtxt" onclick="quickFill('chatInput',this.textContent)">到着しました</button>
+        <button class="qtxt" onclick="quickFill('chatInput',this.textContent)">完了しました</button>
+        <button class="qtxt" onclick="quickFill('chatInput',this.textContent)">材料が不足しています</button>
+        <button class="qtxt" onclick="quickFill('chatInput',this.textContent)">確認お願いします</button>
+      </div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <input id="chatInput" placeholder="メッセージを入力" style="flex:1;padding:13px;border:1px solid var(--bd);border-radius:12px;font:inherit;font-size:15px" onkeydown="if(event.key==='Enter')sendChat()">
         <button class="btn btn-in" style="width:auto;padding:13px 18px;flex-direction:row" onclick="sendChat()">送信</button>
@@ -262,6 +287,12 @@ input,select,textarea{font-size:16px !important}
       <div class="spane" id="sp-plan" style="display:none"></div>
       <div class="spane" id="sp-chat" style="display:none">
         <div id="sChatBox" style="background:#fff;border:1px solid var(--bd);border-radius:16px;padding:12px;min-height:260px;max-height:50vh;overflow:auto;display:flex;flex-direction:column;gap:9px"><div class="spin">読込中…</div></div>
+        <div style="display:flex;gap:7px;overflow-x:auto;margin-top:10px;padding-bottom:2px">
+          <button class="qtxt" onclick="quickFill('sChatInput',this.textContent)">到着しました</button>
+          <button class="qtxt" onclick="quickFill('sChatInput',this.textContent)">完了しました</button>
+          <button class="qtxt" onclick="quickFill('sChatInput',this.textContent)">材料が不足しています</button>
+          <button class="qtxt" onclick="quickFill('sChatInput',this.textContent)">確認お願いします</button>
+        </div>
         <div style="display:flex;gap:8px;margin-top:10px">
           <input id="sChatInput" placeholder="メッセージを入力" style="flex:1;padding:13px;border:1px solid var(--bd);border-radius:12px;font:inherit" onkeydown="if(event.key==='Enter')sendSiteChat()">
           <button class="btn btn-in" style="width:auto;padding:13px 18px;flex-direction:row" onclick="sendSiteChat()">送信</button>
@@ -969,22 +1000,96 @@ function renderThumbs(){var t=document.getElementById('thumbs');t.innerHTML='';p
 function removePhoto(i){photos.splice(i,1);renderThumbs();}
 function addPhotos(ev){var files=ev.target.files;if(!files)return;Array.from(files).forEach(function(f){if(photos.length>=6)return;resizeImage(f,function(durl){photos.push({data:durl,type:'during'});renderThumbs();});});ev.target.value='';}
 function resizeImage(file,cb){var img=new Image();var rd=new FileReader();rd.onload=function(){img.onload=function(){var max=1280;var w=img.width,h=img.height;if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.7));};img.src=rd.result;};rd.readAsDataURL(file);}
+/* ---- REA-182: チャット定型文（タップで入力欄へ。編集してから送信） ---- */
+function quickFill(inputId,txt){var i=document.getElementById(inputId);if(!i)return;i.value=txt;i.focus();}
+/* ---- REA-181: 提出前確認 ---- */
+function photoCounts(){var c={before:0,during:0,after:0};photos.forEach(function(p){c[p.type]=(c[p.type]||0)+1;});return c;}
+function repSiteName(){
+  var sel=document.getElementById('repSite');
+  if(sel&&sel.value){for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===sel.value)return sel.options[i].textContent;}}
+  var t=(lastMe&&lastMe.today)||{};
+  if(t.site_id){var s=siteById(t.site_id);if(s)return s.name;}
+  return '本日の打刻現場';
+}
+function showRepConfirm(){
+  if(!idToken){repStatus('LINEログインが必要です。','err');return;}
+  var body=document.getElementById('repBody').value.trim();
+  if(!body&&photos.length===0){repStatus('写真か作業内容を入力してください。','err');return;}
+  var c=photoCounts();
+  var ph=photos.length?('写真 '+photos.length+'枚（施工前'+c.before+'・施工中'+c.during+'・完了'+c.after+'）'):'写真なし';
+  document.getElementById('repcSummary').innerHTML=
+    '<b>現場:</b> '+esc(repSiteName())+'<br>'
+    +'<b>写真:</b> '+ph+'<br>'
+    +'<b>作業内容:</b> '+(body?(esc(body.length>60?body.slice(0,60)+'…':body)+'（'+body.length+'文字）'):'未入力');
+  document.getElementById('repConfirm').style.display='block';
+  document.getElementById('repConfirm').scrollIntoView({behavior:'smooth',block:'nearest'});
+  repStatus('内容を確認して「この内容で提出する」を押してください。','');
+}
+function hideRepConfirm(){var el=document.getElementById('repConfirm');if(el)el.style.display='none';}
+/* ---- REA-181: 音声入力（非対応端末ではボタンを隠す） ---- */
+var rec=null,recOn=false;
+function initVoice(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){var b=document.getElementById('voiceBtn');if(b)b.style.display='none';}}
+function voiceUI(){var b=document.getElementById('voiceBtn'),l=document.getElementById('voiceLbl');if(!b||!l)return;b.classList.toggle('rec',recOn);l.textContent=recOn?'停止（音声入力中…）':'音声で入力';}
+function toggleVoice(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR)return;
+  if(recOn){try{rec.stop();}catch(e){} recOn=false; voiceUI(); return;}
+  rec=new SR(); rec.lang='ja-JP'; rec.interimResults=false; rec.continuous=true;
+  rec.onresult=function(ev){
+    var t='';
+    for(var i=ev.resultIndex;i<ev.results.length;i++){if(ev.results[i].isFinal)t+=ev.results[i][0].transcript;}
+    if(t){var ta=document.getElementById('repBody');ta.value=(ta.value?ta.value+'\n':'')+t;}
+  };
+  rec.onend=function(){recOn=false;voiceUI();};
+  rec.onerror=function(){recOn=false;voiceUI();repStatus('音声入力を利用できませんでした。マイクの許可を確認してください。','err');};
+  try{rec.start();recOn=true;}catch(e){recOn=false;}
+  voiceUI();
+}
+/* ---- REA-181: AI下書き（サーバー生成→失敗時は端末内テンプレート） ---- */
+function draftTemplate(){
+  var t=(lastMe&&lastMe.today)||{};
+  var nm=repSiteName(); var trade=null;
+  (schedCache||[]).forEach(function(s){if(!trade&&s.trade&&(s.site_id===t.site_id||(s.site===nm)))trade=s.trade;});
+  var c=photoCounts(), lines=[];
+  lines.push(nm+'にて'+(trade?trade+'作業':'本日の作業')+'を実施しました。');
+  if(c.before)lines.push('着手前の状況を確認し、施工前写真'+c.before+'枚を記録しました。');
+  if(c.during)lines.push('作業中の経過は施工中写真'+c.during+'枚のとおりです。');
+  if(c.after)lines.push('仕上がりを確認し、完了写真'+c.after+'枚を添付しました。');
+  if(t.first_in)lines.push('入場 '+fmtT(t.first_in)+(t.last_out?(' / 退場 '+fmtT(t.last_out)):'')+'。');
+  lines.push('（特記事項・翌日の予定があれば追記してください）');
+  return lines.join('\n');
+}
+async function aiDraft(){
+  var btn=document.getElementById('aiBtn'), lbl=document.getElementById('aiLbl');
+  var ta=document.getElementById('repBody');
+  if(ta.value.trim()&&!window.confirm('入力済みの作業内容を下書きで置き換えます。よろしいですか？'))return;
+  if(btn)btn.disabled=true; if(lbl)lbl.textContent='作成中…';
+  var draft=null;
+  try{ // サーバー側のAI生成（genba-report-draft）。未デプロイ/失敗時はテンプレートに切替
+    var r=await fetch(BASE+'/genba-report-draft',{method:'POST',headers:H,body:JSON.stringify({id_token:idToken,site:repSiteName(),photo_types:photos.map(function(p){return p.type;}),memo:ta.value.trim()})});
+    if(r.ok){var j=await r.json(); if(j&&j.ok&&j.draft)draft=j.draft;}
+  }catch(e){}
+  if(!draft)draft=draftTemplate();
+  ta.value=draft;
+  if(btn)btn.disabled=false; if(lbl)lbl.textContent='AIで下書きを作成';
+  repStatus('下書きを作成しました。内容を確認・修正してから提出してください。','ok');
+}
 async function submitReport(){
   if(!idToken){repStatus('LINEログインが必要です。','err');return;}
   var body=document.getElementById('repBody').value.trim();
   if(!body&&photos.length===0){repStatus('写真か作業内容を入力してください。','err');return;}
-  document.getElementById('repSubmit').disabled=true;repStatus('提出中…','busy');
+  document.getElementById('repSubmit').disabled=true;var rg=document.getElementById('repcGo');if(rg)rg.disabled=true;repStatus('提出中…','busy');
   try{
     var selSite=document.getElementById('repSite').value||null;
     var res=await fetch(BASE+'/report-submit',{method:'POST',headers:H,body:JSON.stringify({id_token:idToken,body:body,photos:photos,site_id:selSite})});
     var j=await res.json();
-    if(j.ok){repStatus('日報を提出しました（写真'+j.report.photos+'枚）。監督が確認します。','ok');loadMe();}
-    else if(j.error==='punch_first'){showRepSitePicker();repStatus('本日の打刻がありません。上の「現場」を選んでから提出してください。','err');}
-    else if(j.error==='worker_not_found'){repStatus('未登録の職人です。監督に登録を依頼してください。','err');}
+    if(j.ok){hideRepConfirm();repStatus('日報を提出しました（写真'+j.report.photos+'枚）。監督が確認します。','ok');loadMe();}
+    else if(j.error==='punch_first'){hideRepConfirm();showRepSitePicker();repStatus('本日の打刻がありません。上の「現場」を選んでから提出してください。','err');}
+    else if(j.error==='worker_not_found'){hideRepConfirm();repStatus('未登録の職人です。監督に登録を依頼してください。','err');}
     else{repStatus('提出に失敗しました（'+(j.error||'unknown')+'）','err');}
   }catch(e){repStatus('通信エラー: '+(e&&e.message?e.message:e),'err');}
-  finally{document.getElementById('repSubmit').disabled=false;}
+  finally{document.getElementById('repSubmit').disabled=false;var rg2=document.getElementById('repcGo');if(rg2)rg2.disabled=false;}
 }
+initVoice();
 boot();
 </script>
 </body>
