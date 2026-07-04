@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>田中 大樹 — パイロット運用キット</title>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;background:#f4f6f8;color:#11181c;line-height:1.6}
+.wrap{max-width:720px;margin:0 auto;padding:24px 20px 48px}
+.hdr{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:22px 20px;border-radius:18px;margin-bottom:20px}
+.hdr h1{margin:0 0 6px;font-size:22px}
+.hdr p{margin:0;font-size:13px;opacity:.92}
+.card{background:#fff;border:1px solid #e4e7eb;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.card h2{margin:0 0 12px;font-size:16px;color:#2563eb}
+.warn{background:#fef3c7;border-radius:12px;padding:12px 14px;font-size:13px;margin-bottom:12px}
+.qrbox{display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:center}
+#qr{padding:14px;border:2px solid #e4e7eb;border-radius:16px;background:#fff}
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.links a{display:inline-flex;padding:10px 14px;border:1px solid #d1d5db;border-radius:12px;font-size:13px;font-weight:700;color:#185fa5;text-decoration:none;background:#fff}
+.btn{display:inline-block;background:#2563eb;color:#fff;border:none;border-radius:12px;padding:12px 18px;font-size:14px;font-weight:800;cursor:pointer;margin-top:8px}
+.checklist label{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f0f2f4;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>田中 大樹 — 第2回パイロット</h1>
+    <p>清水様邸 · 退場打刻確認 · 2026-07-04</p>
+  </div>
+
+  <div class="card">
+    <h2>事前準備</h2>
+    <div class="warn">
+      <strong>職人:</strong> 田中 大樹（worker id: 22222222-2222-2222-2222-222222222222）<br>
+      <strong>LINE:</strong> @144qpbeu を友だち追加 → リッチメニュー「現場WORKS」<br>
+      <strong>注意:</strong> DB上の line_user_id は <code>U_test_tanaka</code>（テスト）。実機では本番 userId に更新が必要
+    </div>
+    <div class="links">
+      <a href="pilot-run-tanaka.html">📱 田中さん向け実行ガイド</a>
+      <a href="pilot-shimizu.html">清水様邸キット</a>
+      <a href="https://linear.app/realife-hd/issue/REA-138">REA-138</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>掲示用QR（清水様邸）</h2>
+    <div class="qrbox"><div id="qr"></div></div>
+    <button class="btn" onclick="window.print()">印刷</button>
+  </div>
+
+  <div class="card">
+    <h2>確認チェックリスト</h2>
+    <div class="checklist">
+      <label><input type="checkbox"> 田中さんが LINE 友だち追加済み</label>
+      <label><input type="checkbox"> 入場打刻 OK</label>
+      <label><input type="checkbox"><strong>退場打刻 OK</strong>（第1回パイロットの未記録を解消）</label>
+      <label><input type="checkbox"> 日報提出 OK（任意）</label>
+      <label><input type="checkbox"> UXフィードバック収集</label>
+    </div>
+  </div>
+</div>
+<script>
+new QRCode(document.getElementById("qr"), { text: "SHIMIZU-21FDCEEE72", width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+</script>
+</body>
+</html>

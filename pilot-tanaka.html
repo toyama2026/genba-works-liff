@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>田中 大樹 — 第2回パイロット | 現場WORKS</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;background:#f2f5f7;color:#111;padding:16px 16px 32px;line-height:1.5}
+h1{font-size:20px;margin:0 0 4px}
+.sub{font-size:13px;color:#6b7280;margin-bottom:16px}
+.warn{background:#fef3c7;border:1px solid #fcd34d;border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:14px}
+.warn strong{color:#b45309}
+.step{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.step.exit{border-color:#fca5a5;background:#fff5f5}
+.step h2{margin:0 0 8px;font-size:16px;display:flex;align-items:center;gap:8px}
+.num{width:28px;height:28px;border-radius:50%;background:#06c755;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+.num.warn{background:#ef4444}
+.step p{margin:0;font-size:14px;color:#374151}
+.step a{color:#185fa5;font-weight:700}
+.btn{display:block;width:100%;text-align:center;background:#06c755;color:#fff;text-decoration:none;padding:14px;border-radius:14px;font-weight:800;font-size:15px;margin-top:10px}
+.btn.secondary{background:#fff;color:#111;border:1px solid #d1d5db}
+.btn.danger{background:#ef4444}
+.check{width:22px;height:22px;accent-color:#06c755;margin-right:8px}
+label{display:flex;align-items:flex-start;gap:8px;font-size:14px;padding:8px 0;border-top:1px solid #f0f2f4;margin-top:8px;cursor:pointer}
+footer{font-size:12px;color:#9ca3af;text-align:center;margin-top:20px}
+</style>
+</head>
+<body>
+<h1>第2回パイロット — 田中 大樹</h1>
+<p class="sub">清水様邸 · 退場打刻まで確認 · REA-138 フォロー</p>
+
+<div class="warn">
+  <strong>事前準備（KOKI）</strong><br>
+  ① @144qpbeu を友だち追加してもらう<br>
+  ② 田中さんの LINE userId を <code>genba.workers</code> に登録（現在: <code>U_test_tanaka</code> はテスト用）<br>
+  ③ このページを田中さんのスマホで開く
+</div>
+
+<div class="step">
+  <h2><span class="num">1</span> 現場WORKSを開く</h2>
+  <p>LINE → @144qpbeu → 下部メニュー → <strong>現場WORKS</strong></p>
+  <a class="btn" href="https://liff.line.me/2010459645-nZrNO9J0">現場WORKSを開く</a>
+</div>
+
+<div class="step">
+  <h2><span class="num">2</span> 入場打刻</h2>
+  <p>「QRコードを読み取る」→ 清水様邸の掲示QR</p>
+  <a class="btn secondary" href="site.html?token=SHIMIZU-21FDCEEE72&name=清水様邸">掲示用QRを表示</a>
+</div>
+
+<div class="step">
+  <h2><span class="num">3</span> 日報（任意）</h2>
+  <p>下部「日報」→ 写真1枚 → 種別タップ → 作業内容 → 提出</p>
+</div>
+
+<div class="step exit">
+  <h2><span class="num warn">4</span> 退場打刻（必須）</h2>
+  <p><strong>作業終了後、必ず実施。</strong> ホームの「退場打刻を忘れずに」からでもOK。QR読取 → <strong>退場</strong> → 日報タブへ自動遷移します。</p>
+  <a class="btn danger" href="https://liff.line.me/2010459645-nZrNO9J0">現場WORKSで退場する</a>
+</div>
+
+<div class="step">
+  <h2><span class="num">✓</span> チェック</h2>
+  <label><input type="checkbox" class="check">入場できた</label>
+  <label><input type="checkbox" class="check"><strong>退場できた</strong>（site_attendance に out 記録）</label>
+  <label><input type="checkbox" class="check">日報を提出できた（任意）</label>
+  <label><input type="checkbox" class="check">使いにくい点がない</label>
+</div>
+
+<a class="btn secondary" href="pilot-shimizu.html">パイロットキット（管理者用）</a>
+<a class="btn secondary" href="pilot-run-today.html" style="margin-top:8px">清水様邸 実行ガイド</a>
+
+<footer>完了したら KOKI に「完了」と連絡 → Linear REA-138 更新</footer>
+</body>
+</html>
