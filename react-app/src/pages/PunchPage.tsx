@@ -168,7 +168,7 @@ export function PunchPage() {
               onClick={() => void punch("in")}
               className="flex flex-col items-center gap-1.5 rounded-2xl bg-[#06c755] py-5 text-white shadow-md shadow-[#06c755]/30 disabled:bg-[#e9edf0] disabled:text-[#aab2b9] disabled:shadow-none"
             >
-              <span className="text-[17px] font-extrabold">入場</span>
+              <span className="text-[17px] font-extrabold">入場する</span>
             </button>
             <button
               type="button"
@@ -176,7 +176,7 @@ export function PunchPage() {
               onClick={() => void punch("out")}
               className="flex flex-col items-center gap-1.5 rounded-2xl bg-[#e8453c] py-5 text-white shadow-md shadow-[#e8453c]/30 disabled:bg-[#e9edf0] disabled:text-[#aab2b9] disabled:shadow-none"
             >
-              <span className="text-[17px] font-extrabold">退場</span>
+              <span className="text-[17px] font-extrabold">退場する</span>
             </button>
           </div>
           <p className="mt-2.5 text-center text-[11.5px] text-[#6b7280]">{hint}</p>

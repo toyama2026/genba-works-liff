@@ -4,9 +4,9 @@ export type TabKey = "home" | "sites" | "report" | "chat" | "me";
 
 const TABS: { key: TabKey; label: string; icon: typeof Home }[] = [
   { key: "home", label: "ホーム", icon: Home },
-  { key: "sites", label: "現場", icon: HardHat },
-  { key: "report", label: "日報", icon: NotebookPen },
-  { key: "chat", label: "チャット", icon: MessageCircle },
+  { key: "sites", label: "今日の現場", icon: HardHat },
+  { key: "report", label: "日報を書く", icon: NotebookPen },
+  { key: "chat", label: "現場連絡", icon: MessageCircle },
   { key: "me", label: "マイページ", icon: User },
 ];
 
