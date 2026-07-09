@@ -58,7 +58,7 @@ export function BackBtn({ onClick, label }: { onClick: () => void; label: string
     <button
       type="button"
       onClick={onClick}
-      className="mb-1 inline-flex items-center gap-1 bg-transparent px-1 py-1.5 text-[13.5px] font-bold text-[#6b7280]"
+      className="mb-1 inline-flex min-h-[44px] items-center gap-1 bg-transparent px-2 py-2.5 text-[13.5px] font-bold text-[#6b7280]"
     >
       ‹ {label}
     </button>

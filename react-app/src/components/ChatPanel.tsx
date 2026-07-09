@@ -176,7 +176,7 @@ export function ChatPanel({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && void handleSend()}
           placeholder="メッセージを入力"
-          className="flex-1 rounded-xl border border-[#e6eaee] px-3 py-3 text-[15px]"
+          className="flex-1 rounded-xl border border-[#e6eaee] px-3 py-3 text-base"
         />
         <button
           type="button"

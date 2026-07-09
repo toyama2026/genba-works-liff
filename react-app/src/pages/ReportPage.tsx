@@ -75,7 +75,7 @@ export function ReportPage() {
           <select
             value={repSiteId}
             onChange={(e) => setRepSiteId(e.target.value)}
-            className="w-full rounded-xl border border-[#e6eaee] bg-white p-3 text-sm"
+            className="w-full rounded-xl border border-[#e6eaee] bg-white p-3 text-base"
           >
             <option value="">現場を選択…</option>
             {repSites.map((s) => (
@@ -152,7 +152,7 @@ export function ReportPage() {
           value={repBody}
           onChange={(e) => setRepBody(e.target.value)}
           placeholder="例）2階廊下のコーティング下塗りまで完了。乾燥待ち。"
-          className="min-h-[130px] w-full resize-none rounded-xl border border-[#e6eaee] p-3 text-sm"
+          className="min-h-[130px] w-full resize-none rounded-xl border border-[#e6eaee] p-3 text-base"
         />
         <div className="mt-2.5 flex gap-2">
           {voiceSupported && (

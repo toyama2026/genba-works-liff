@@ -38,7 +38,7 @@ export function RegisterOverlay() {
           <select
             value={company || companies[0]}
             onChange={(e) => setCompany(e.target.value)}
-            className="w-full rounded-xl border border-[#e6eaee] bg-white p-3.5 text-[15px]"
+            className="w-full rounded-xl border border-[#e6eaee] bg-white p-3.5 text-base"
           >
             {companies.map((c) => (
               <option key={c} value={c}>
@@ -51,7 +51,7 @@ export function RegisterOverlay() {
           <select
             value={trade}
             onChange={(e) => setTrade(e.target.value)}
-            className="w-full rounded-xl border border-[#e6eaee] bg-white p-3.5 text-[15px]"
+            className="w-full rounded-xl border border-[#e6eaee] bg-white p-3.5 text-base"
           >
             {TRADES.map((t) => (
               <option key={t} value={t}>
@@ -69,7 +69,7 @@ export function RegisterOverlay() {
                 ? `未入力なら「${displayName}」`
                 : "未入力ならLINEの名前を使用"
             }
-            className="w-full rounded-xl border border-[#e6eaee] p-3 text-[15px]"
+            className="w-full rounded-xl border border-[#e6eaee] p-3 text-base"
           />
         </Card>
         <PrimaryBtn

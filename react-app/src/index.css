@@ -12,4 +12,14 @@ body {
   background: #f2f5f7;
   color: #14181b;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button:active {
+  opacity: 0.75;
 }
