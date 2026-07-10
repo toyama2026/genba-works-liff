@@ -6,7 +6,7 @@ export function Header({
   env?: string;
 }) {
   return (
-    <header className="-mx-4 -mt-4 rounded-b-3xl bg-gradient-to-br from-[#06c755] to-[#04a648] px-4 pb-5 pt-5 text-white shadow-lg shadow-[#06c755]/25">
+    <header className="-mx-4 -mt-4 rounded-b-3xl bg-gradient-to-br from-[#06c755] to-[#04a648] px-4 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] text-white shadow-lg shadow-[#06c755]/25">
       <div className="flex items-center gap-2.5">
         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20 text-sm font-extrabold">
           現
