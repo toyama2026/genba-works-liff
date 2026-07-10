@@ -25,6 +25,9 @@ import { filesToPhotos, type LocalPhoto } from "../lib/photos";
 import { lastUnreported, siteById } from "../lib/site-helpers";
 import type {
   ChatMessage,
+  DmConversation,
+  DmMessage,
+  DmWorker,
   GenbaMeResponse,
   GenbaSchedule,
   GenbaSite,
@@ -90,6 +93,13 @@ type GenbaContextValue = {
     error?: string;
   }>;
   sendChat: (body: string, siteId?: string | null) => Promise<void>;
+  loadDmWorkers: () => Promise<DmWorker[]>;
+  loadDmConversations: () => Promise<DmConversation[]>;
+  loadDmHistory: (
+    otherWorkerId: string,
+    since?: string | null,
+  ) => Promise<{ ok: boolean; messages: DmMessage[]; mine?: string; other_name?: string | null; error?: string }>;
+  sendDm: (otherWorkerId: string, body: string) => Promise<void>;
   toggleScheduleDay: (scheduleId: string, date: string, decline: boolean) => Promise<void>;
   createSchedule: (
     siteId: string,
@@ -475,6 +485,57 @@ export function GenbaProvider({
     [idToken, chatSiteId, curSite],
   );
 
+  const loadDmWorkers = useCallback(async () => {
+    const token = idToken ?? getLiffIdToken();
+    const j = await apiPost<{ ok: boolean; workers: DmWorker[] }>("/genba-dm", {
+      mode: "workers",
+      id_token: token,
+    });
+    return j.ok ? j.workers : [];
+  }, [idToken]);
+
+  const loadDmConversations = useCallback(async () => {
+    const token = idToken ?? getLiffIdToken();
+    const j = await apiPost<{ ok: boolean; conversations: DmConversation[] }>("/genba-dm", {
+      mode: "list",
+      id_token: token,
+    });
+    return j.ok ? j.conversations : [];
+  }, [idToken]);
+
+  const loadDmHistory = useCallback(
+    async (otherWorkerId: string, since?: string | null) => {
+      const token = idToken ?? getLiffIdToken();
+      const body: Record<string, unknown> = {
+        mode: "history",
+        id_token: token,
+        other_worker_id: otherWorkerId,
+      };
+      if (since) body.since = since;
+      return apiPost<{
+        ok: boolean;
+        messages: DmMessage[];
+        mine?: string;
+        other_name?: string | null;
+        error?: string;
+      }>("/genba-dm", body);
+    },
+    [idToken],
+  );
+
+  const sendDm = useCallback(
+    async (otherWorkerId: string, body: string) => {
+      const token = idToken ?? getLiffIdToken();
+      await apiPost("/genba-dm", {
+        mode: "send",
+        id_token: token,
+        other_worker_id: otherWorkerId,
+        body,
+      });
+    },
+    [idToken],
+  );
+
   const toggleScheduleDay = useCallback(
     async (scheduleId: string, date: string, decline: boolean) => {
       const token = idToken ?? getLiffIdToken();
@@ -767,6 +828,10 @@ export function GenbaProvider({
     setChatSiteId,
     loadChat,
     sendChat,
+    loadDmWorkers,
+    loadDmConversations,
+    loadDmHistory,
+    sendDm,
     toggleScheduleDay,
     createSchedule,
     setPhotos,

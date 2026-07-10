@@ -69,6 +69,30 @@ export type ChatMessage = {
   sender_name?: string | null;
 };
 
+export type DmWorker = {
+  id: string;
+  name: string;
+  company_name?: string | null;
+  trade?: string | null;
+};
+
+export type DmConversation = {
+  worker_id: string;
+  name: string;
+  company_name?: string | null;
+  last_body: string;
+  last_at: string | null;
+  unread: number;
+};
+
+export type DmMessage = {
+  id: string;
+  sender_worker_id: string;
+  recipient_worker_id: string;
+  body: string;
+  created_at: string;
+};
+
 export type ReportPhoto = { data: string; type: PhotoType };
 
 export type ViewKey = "home" | "punch" | "sites" | "site" | "report" | "chat" | "my";
