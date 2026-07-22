@@ -253,7 +253,7 @@ export function HomePage() {
   if (un) {
     todos.push(
       <TodoRow key="chat" cls="todo-info" onClick={() => setTab("chat")}>
-        現場連絡の未読を確認（{un}件）
+        チャットの未読を確認（{un}件）
       </TodoRow>,
     );
   }
@@ -327,7 +327,7 @@ export function HomePage() {
           className="flex flex-col items-center gap-1.5 rounded-[14px] border border-[#e6eaee] bg-white py-3 text-xs font-extrabold"
         >
           <MessageCircle className="h-4 w-4 text-[#05a847]" />
-          現場連絡を見る
+          チャットを見る
         </button>
       </Card>
     </div>

@@ -97,8 +97,10 @@ export function SiteDetailPage() {
     setScBusy(false);
   };
 
+  const chatUnread = unreadFor(me, curSite.id);
+
   return (
-    <div>
+    <div className="pb-20">
       <BackBtn onClick={closeSite} label="現場一覧へ" />
 
       <div className="mb-3 px-1">
@@ -177,17 +179,6 @@ export function SiteDetailPage() {
             }}
           >
             この現場で打刻する（QR読取）
-          </PrimaryBtn>
-
-          <PrimaryBtn
-            className="mb-3.5 flex items-center justify-center gap-2 py-4 text-[15px]"
-            onClick={() => openSiteChat(curSite.id)}
-          >
-            <MessageCircle className="h-5 w-5" strokeWidth={2.4} />
-            チャット
-            {unreadFor(me, curSite.id) > 0
-              ? `（未読${unreadFor(me, curSite.id)}件）`
-              : ""}
           </PrimaryBtn>
 
           <Section>工程（入らない日はタップで切替）</Section>
@@ -459,6 +450,19 @@ export function SiteDetailPage() {
           </Card>
         </>
       )}
+
+      {/* KANNA-style sticky chat CTA — always visible on site detail */}
+      <div className="pointer-events-none fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-1/2 z-20 w-full max-w-[460px] -translate-x-1/2 px-4 pb-2">
+        <button
+          type="button"
+          onClick={() => openSiteChat(curSite.id)}
+          className="pointer-events-auto flex w-full items-center justify-center gap-2 rounded-2xl bg-[#06c755] py-4 text-[16px] font-extrabold text-white shadow-lg shadow-[#06c755]/35"
+        >
+          <MessageCircle className="h-5 w-5" strokeWidth={2.4} />
+          チャット
+          {chatUnread > 0 ? `（未読${chatUnread}件）` : ""}
+        </button>
+      </div>
     </div>
   );
 }
